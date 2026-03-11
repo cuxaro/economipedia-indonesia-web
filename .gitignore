@@ -1,0 +1,9 @@
+node_modules/
+.dist/
+dist/
+.cache/
+.astro/
+.vercel/
+.lighthouseci/
+.lighthouserc.auto.json
+npm-debug.log*

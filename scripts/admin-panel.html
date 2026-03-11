@@ -1,0 +1,174 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - ensiklopedia-ekonomi</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f4f7f5; color: #0f2317; }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 20px; }
+    h1 { margin-top: 0; }
+    .panel { background: #fff; border: 1px solid #d7e1d9; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+    input[type='password'], input[type='text'] { width: 100%; padding: 8px; border: 1px solid #c8d5cb; border-radius: 6px; }
+    button { border: none; padding: 9px 12px; border-radius: 8px; background: #08653c; color: #fff; cursor: pointer; }
+    button.secondary { background: #4a6252; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { border-bottom: 1px solid #ebf0eb; text-align: left; padding: 8px; }
+    .ok { color: #08653c; font-weight: bold; }
+    .pending { color: #a06705; font-weight: bold; }
+    .draft { color: #334a3d; }
+    pre { background: #101710; color: #d2ead8; border-radius: 8px; padding: 10px; max-height: 240px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Admin Local - ensiklopedia-ekonomi</h1>
+
+    <div class="panel">
+      <label>Gemini API key (session only)</label>
+      <input id="apiKey" type="password" placeholder="AIza..." />
+      <div class="actions">
+        <button id="translateSelected">Traducir seleccionados</button>
+        <button id="translatePending" class="secondary">Traducir pendientes</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <label>Commit message</label>
+      <input id="commitMessage" type="text" value="chore: publish translated articles" />
+      <div class="actions">
+        <button id="publishBtn">Subir (build + push + vercel)</button>
+        <button id="reloadBtn" class="secondary">Recargar</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <table>
+        <thead>
+          <tr>
+            <th><input id="selectAll" type="checkbox" /></th>
+            <th>slug</th>
+            <th>translation</th>
+            <th>published</th>
+            <th>words</th>
+            <th>published_at</th>
+            <th>last_translated</th>
+            <th>last_published</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <strong>Log</strong>
+      <pre id="log">Ready.</pre>
+    </div>
+  </div>
+
+  <script>
+    const rowsEl = document.getElementById('rows');
+    const logEl = document.getElementById('log');
+
+    let rows = [];
+
+    function log(message) {
+      logEl.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message + '\n' + logEl.textContent;
+    }
+
+    function selectedSlugs() {
+      return Array.from(document.querySelectorAll('input[data-slug]:checked')).map((el) => el.dataset.slug);
+    }
+
+    async function load() {
+      const response = await fetch('/api/admin/articles');
+      const data = await response.json();
+      rows = data.articles || [];
+      rowsEl.innerHTML = rows.map((item) => {
+        const tClass = item.translationStatus === 'machine_translated' ? 'ok' : 'pending';
+        const pClass = item.publishedStatus === 'published' ? 'ok' : 'draft';
+        return '<tr>' +
+          '<td><input type="checkbox" data-slug="' + item.slug + '" /></td>' +
+          '<td>' + item.slug + '</td>' +
+          '<td class="' + tClass + '">' + item.translationStatus + '</td>' +
+          '<td class="' + pClass + '">' + item.publishedStatus + '</td>' +
+          '<td>' + item.wordCount + '</td>' +
+          '<td>' + (item.publishedAt || '') + '</td>' +
+          '<td>' + (item.lastTranslatedAt || '') + '</td>' +
+          '<td>' + (item.lastPublishedAt || '') + '</td>' +
+          '</tr>';
+      }).join('');
+      log('Loaded ' + rows.length + ' article(s).');
+    }
+
+    async function post(url, payload) {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Request failed');
+      return data;
+    }
+
+    document.getElementById('selectAll').addEventListener('change', (event) => {
+      document.querySelectorAll('input[data-slug]').forEach((el) => {
+        el.checked = event.target.checked;
+      });
+    });
+
+    document.getElementById('reloadBtn').addEventListener('click', load);
+
+    document.getElementById('translateSelected').addEventListener('click', async () => {
+      const apiKey = document.getElementById('apiKey').value.trim();
+      const slugs = selectedSlugs();
+      if (!apiKey) return alert('Gemini API key required');
+      if (!slugs.length) return alert('Select at least one article');
+
+      try {
+        log('Translating ' + slugs.length + ' selected article(s)...');
+        const data = await post('/api/admin/translate', { apiKey, slugs });
+        log('Translation done. success=' + data.success + ', failed=' + data.failed);
+        await load();
+      } catch (error) {
+        log('Translate error: ' + error.message);
+      }
+    });
+
+    document.getElementById('translatePending').addEventListener('click', async () => {
+      const apiKey = document.getElementById('apiKey').value.trim();
+      if (!apiKey) return alert('Gemini API key required');
+
+      const pending = rows.filter((item) => item.translationStatus !== 'machine_translated').map((item) => item.slug);
+      if (!pending.length) return alert('No pending articles');
+
+      try {
+        log('Translating ' + pending.length + ' pending article(s)...');
+        const data = await post('/api/admin/translate', { apiKey, slugs: pending });
+        log('Translation done. success=' + data.success + ', failed=' + data.failed);
+        await load();
+      } catch (error) {
+        log('Translate error: ' + error.message);
+      }
+    });
+
+    document.getElementById('publishBtn').addEventListener('click', async () => {
+      const commitMessage = document.getElementById('commitMessage').value.trim();
+      try {
+        log('Running publish pipeline...');
+        const data = await post('/api/admin/publish', { commitMessage });
+        log('Publish completed.');
+        log((data.log || []).join('\n\n'));
+        await load();
+      } catch (error) {
+        log('Publish error: ' + error.message);
+      }
+    });
+
+    load().catch((error) => log('Initial load failed: ' + error.message));
+  </script>
+</body>
+</html>

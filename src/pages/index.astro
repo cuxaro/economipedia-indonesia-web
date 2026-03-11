@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getAllArticles } from '../lib/content';
+
+const articles = getAllArticles().slice(0, 80);
+const canonical = (import.meta.env.SITE || 'https://example.com').replace(/\/$/, '') + '/';
+---
+<BaseLayout
+  title="ensiklopedia-ekonomi"
+  description="Kamus ekonomi dalam bahasa Indonesia dengan artikel ringkas, cepat, dan SEO-ready."
+  canonical={canonical}
+>
+  <h1>Ensiklopedia Ekonomi Indonesia</h1>
+  <p class="page-intro">
+    Referensi ekonomi berbahasa Indonesia dengan format ringkas, jelas, dan mudah ditelusuri.
+  </p>
+  <section class="card">
+    <h2 class="section-title">Artikel terbaru</h2>
+    <div class="list-grid">
+      {articles.map((article) => (
+        <a class="related-item" href={`/id/${article.slug}/`}>
+          <strong>{article.title}</strong>
+        </a>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

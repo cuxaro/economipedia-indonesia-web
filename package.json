@@ -1,0 +1,28 @@
+{
+  "name": "ensiklopedia-ekonomi",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "npm run content:build",
+    "dev": "astro dev",
+    "admin": "node scripts/admin-server.mjs",
+    "content:build": "node scripts/build-content.mjs",
+    "translate:cost": "node scripts/estimate-translation-cost.mjs",
+    "seo:check": "node scripts/validate-seo.mjs",
+    "build": "npm run content:build && astro build",
+    "preview": "astro preview",
+    "lhci:prepare": "node scripts/create-lhci-config.mjs",
+    "lhci:run": "npm run lhci:prepare && lhci autorun --config=./.lighthouserc.auto.json"
+  },
+  "dependencies": {
+    "astro": "^5.5.4",
+    "marked": "^15.0.7"
+  },
+  "devDependencies": {
+    "@lhci/cli": "^0.14.0"
+  },
+  "overrides": {
+    "shiki": "3.21.0"
+  }
+}

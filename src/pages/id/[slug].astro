@@ -1,0 +1,75 @@
+﻿---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import {
+  buildArticleSchema,
+  buildBreadcrumbSchema,
+  getAllArticles,
+  getBreadcrumbs,
+  getCanonical,
+  getRelatedArticles,
+  renderArticleHtml
+} from '../../lib/content';
+
+export function getStaticPaths() {
+  return getAllArticles().map((article) => ({
+    params: { slug: article.slug },
+    props: { article }
+  }));
+}
+
+const { article } = Astro.props;
+const canonical = getCanonical(`/id/${article.slug}/`);
+const breadcrumbs = getBreadcrumbs(article);
+const related = getRelatedArticles(article);
+const articleSchema = buildArticleSchema(article, canonical);
+const breadcrumbSchema = buildBreadcrumbSchema(breadcrumbs);
+const html = renderArticleHtml(article.content.markdown);
+---
+<BaseLayout
+  title={article.seo.title}
+  description={article.seo.description}
+  canonical={canonical}
+  robots={article.seo.robots}
+  ogTitle={article.seo.ogTitle}
+  ogDescription={article.seo.ogDescription}
+>
+  <Breadcrumbs items={breadcrumbs} />
+  <article class="article-shell">
+    <header class="article-header">
+      <h1>{article.title}</h1>
+      <p class="meta">{new Date(article.publishedAt).toLocaleDateString('id-ID')} · {article.author}</p>
+    </header>
+
+    {
+      article.image && (
+        <figure>
+          <img
+            src={article.image.src}
+            alt={article.image.alt || article.title}
+            width="1200"
+            height="630"
+            loading="eager"
+            decoding="async"
+          />
+        </figure>
+      )
+    }
+
+    <section class="article-body" set:html={html} />
+  </article>
+
+  {related.length > 0 && (
+    <aside class="related card" aria-label="Artikel terkait" style="margin-top:1rem;">
+      <h2 class="section-title">Artikel terkait</h2>
+      <div class="related-grid">
+        {related.map((item) => (
+          <a class="related-item" href={`/id/${item.slug}/`}>{item.title}</a>
+        ))}
+      </div>
+    </aside>
+  )}
+
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+</BaseLayout>

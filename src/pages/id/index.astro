@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getAllArticles, getCanonical } from '../../lib/content';
+
+const articles = getAllArticles();
+const canonical = getCanonical('/id/');
+---
+<BaseLayout
+  title="Daftar Artikel | Economipedia Indonesia"
+  description="Semua artikel ekonomi dalam bahasa Indonesia."
+  canonical={canonical}
+>
+  <h1>Daftar Artikel</h1>
+  <p class="page-intro">Total artikel tersedia: {articles.length}</p>
+  <section class="card">
+    <div class="list-grid">
+      {articles.map((article) => (
+        <a class="related-item" href={`/id/${article.slug}/`}>
+          <strong>{article.title}</strong>
+        </a>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

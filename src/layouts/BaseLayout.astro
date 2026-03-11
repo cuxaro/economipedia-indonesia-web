@@ -1,0 +1,214 @@
+---
+export interface Props {
+  title: string;
+  description: string;
+  canonical: string;
+  robots?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+}
+
+const {
+  title,
+  description,
+  canonical,
+  robots = 'index,follow',
+  ogTitle = title,
+  ogDescription = description
+} = Astro.props;
+---
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    <link rel="canonical" href={canonical} />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content={ogTitle} />
+    <meta property="og:description" content={ogDescription} />
+    <meta property="og:url" content={canonical} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={ogTitle} />
+    <meta name="twitter:description" content={ogDescription} />
+
+    <style>
+      :root {
+        --bg: #f2f4ef;
+        --surface: #ffffff;
+        --surface-2: #f9fbf7;
+        --ink: #13211b;
+        --muted: #5f6f66;
+        --accent: #0d7a4a;
+        --accent-2: #184f96;
+        --line: #d8dfd8;
+        --max: 980px;
+        --article-max: 720px;
+        --shadow: 0 10px 35px rgba(16, 33, 27, 0.08);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at 90% 8%, rgba(13, 122, 74, 0.12), transparent 35%),
+          radial-gradient(circle at 8% 18%, rgba(24, 79, 150, 0.1), transparent 38%),
+          var(--bg);
+        color: var(--ink);
+        font-family: 'Palatino Linotype', Palatino, Georgia, serif;
+        line-height: 1.72;
+        text-rendering: optimizeLegibility;
+      }
+      .site-header {
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(6px);
+      }
+      .site-header-inner {
+        width: min(var(--max), 94vw);
+        margin: 0 auto;
+        padding: 1rem 0;
+      }
+      .brand {
+        margin: 0;
+        font-size: 1.1rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+      .brand a {
+        color: var(--ink);
+        text-decoration: none;
+      }
+      main {
+        width: min(var(--max), 94vw);
+        margin: 2rem auto 4rem;
+      }
+      a {
+        color: var(--accent);
+      }
+      h1,
+      h2,
+      h3 {
+        line-height: 1.26;
+      }
+      img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 0.95rem;
+        margin: 0;
+      }
+      .card {
+        border: 1px solid var(--line);
+        padding: 1rem 1.1rem;
+        border-radius: 14px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+      .section-title {
+        margin: 0 0 0.75rem;
+        font-size: 1.35rem;
+      }
+      .page-intro {
+        margin: 0 0 1.25rem;
+        max-width: 68ch;
+        color: var(--muted);
+      }
+      .article-shell {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        padding: 1.2rem 1.4rem 1.5rem;
+      }
+      .article-header h1 {
+        font-size: clamp(1.7rem, 3.8vw, 2.6rem);
+        margin: 0.35rem 0 0.7rem;
+      }
+      .article-body {
+        max-width: var(--article-max);
+      }
+      .article-body p {
+        margin: 0 0 1rem;
+      }
+      .article-body ul {
+        padding-left: 1.2rem;
+      }
+      .article-body :where(h2, h3) {
+        margin-top: 2rem;
+        margin-bottom: 0.6rem;
+      }
+      .related-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 0.8rem;
+      }
+      .related-grid a {
+        text-decoration: none;
+        color: var(--ink);
+      }
+      .related-item {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 0.8rem 0.9rem;
+        background: var(--surface-2);
+      }
+      .list-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 0.8rem;
+      }
+      .list-grid a {
+        text-decoration: none;
+      }
+      nav[aria-label='Breadcrumb'] ol {
+        display: flex;
+        flex-wrap: wrap;
+        list-style: none;
+        padding: 0;
+        margin: 0 0 1rem;
+        gap: 0.45rem;
+        font-size: 0.92rem;
+        color: var(--muted);
+      }
+      nav[aria-label='Breadcrumb'] li:not(:last-child)::after {
+        content: '›';
+        margin-left: 0.45rem;
+        color: var(--muted);
+      }
+      nav[aria-label='Breadcrumb'] a {
+        color: var(--accent-2);
+        text-decoration: none;
+      }
+      @media (max-width: 768px) {
+        .article-shell {
+          padding: 1rem;
+          border-radius: 14px;
+        }
+        .site-header-inner {
+          padding: 0.9rem 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header-inner">
+        <p class="brand"><a href="/">Ensiklopedia Ekonomi</a></p>
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>
